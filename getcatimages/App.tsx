@@ -1,90 +1,107 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import { Button, Provider as PaperProvider, Card, Title, ActivityIndicator } from 'react-native-paper';
+import { ScrollView, StyleSheet, View, Image, Text, Pressable, ActivityIndicator } from 'react-native';
 import axios from 'axios';
-import Constants from 'expo-constants';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const App = () => {
-  const [images, setImages] = useState<string[]>([]);
+  const [catImages, setCatImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const { backendUrl } = Constants.expoConfig.extra;
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchImages = async () => {
-    setLoading(true);
+  const fetchCatImages = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/cats`);
-      const newImages = response.data.map((img: { url: string }) => img.url);
-      setImages((prevImages) => [...prevImages, ...newImages]);
+      setLoading(true);
+      setError(null);
+
+      const response = await axios.get('http://localhost:3000/api/cats');
+      const images = response.data.map((cat: any) => cat.url);
+      setCatImages([...catImages, ...images]);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao pegar imagens: ", error);
+      setError("Oops! Algo deu errado. Por favor, tente novamente mais tarde.");
     } finally {
       setLoading(false);
     }
   };
 
+  const clearImages = () => {
+    setCatImages([]);
+  };
+
   return (
-    <PaperProvider>
-      <LinearGradient
-        colors={['#ff9a9e', '#fad0c4']}
-        style={styles.background}
-      >
-        <SafeAreaView style={styles.container}>
-          <Title style={styles.title}>Cat Gallery</Title>
-          <Button
-            mode="contained"
-            onPress={fetchImages}
-            style={styles.button}
-            contentStyle={styles.buttonContent}
-            labelStyle={styles.buttonLabel}
-          >
-            {loading ? <ActivityIndicator color="#fff" /> : 'Load More Cats'}
-          </Button>
-          <ScrollView contentContainerStyle={styles.scrollView}>
-            {images.map((url, index) => (
-              <Card key={index} style={styles.card}>
-                <Card.Cover source={{ uri: url }} style={styles.image} />
-              </Card>
-            ))}
-          </ScrollView>
-        </SafeAreaView>
-      </LinearGradient>
-    </PaperProvider>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Galeria de Gatos</Text>
+      </View>
+      <Pressable onPress={fetchCatImages} style={styles.button}>
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Obter Imagens</Text>
+        )}
+      </Pressable>
+      <Pressable onPress={clearImages} style={styles.clearButton}>
+        <Text style={styles.buttonText}>Limpar Imagens</Text>
+      </Pressable>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      <ScrollView style={styles.scrollView}>
+        {catImages.map((image, index) => (
+          <Image key={index} source={{ uri: image }} style={styles.image} />
+        ))}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
   container: {
     flex: 1,
-    paddingTop: 50,
-    alignItems: 'center',
+    backgroundColor: '#4F496D',
+    paddingTop: 0,
   },
-  title: {
+  header: {
+    backgroundColor: '#2D3250',
+    width: '100%',
+    padding: 20,
+    marginBottom: 20,
+  },
+  headerText: {
+    color: '#FFFFFF',
     fontSize: 24,
-    marginBottom: 20,
-    color: '#fff',
-  },
-  button: {
-    marginBottom: 20,
-  },
-  buttonContent: {
-    height: 50,
-  },
-  buttonLabel: {
-    fontSize: 18,
+    textAlign: 'center',
+    fontWeight: 'bold',
   },
   scrollView: {
-    alignItems: 'center',
-  },
-  card: {
-    marginBottom: 20,
-    width: 300,
+    marginTop: 20,
+    width: '100%',
   },
   image: {
-    height: 300,
+    width: '100%',
+    height: 200,
+    marginBottom: 20,
+    borderRadius: 8,
+  },
+  button: {
+    backgroundColor: '#3E7E6F',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  clearButton: {
+    backgroundColor: '#E46E6E',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 14,
+    marginBottom: 10,
   },
 });
 

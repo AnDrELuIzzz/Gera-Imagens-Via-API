@@ -2,6 +2,8 @@ const express = require('express');
 const axios = require('axios');
 require ('dotenv').config();
 const app = express();
+const cors = require("cors");
+app.use(cors());
 const { PORT, API_KEY } = process.env;
 
 app.get('/api/cats', async (req, res) => {
